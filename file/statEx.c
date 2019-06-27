@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-		struct stat sb;
+		struct stat sb; //파일의 상태를 정의한 구조체
 
 	    if (argc != 2)
 		{
@@ -21,21 +21,21 @@ int main(int argc, char *argv[])
 	    }
 	    printf("File type:                ");
 	
-		switch (sb.st_mode & S_IFMT) 
+		switch (sb.st_mode & S_IFMT) //파일 타입과 퍼미션
 	    {
-		      case S_IFBLK:  printf("block device\n");            break;
-			  case S_IFCHR:  printf("character device\n");        break;
-			  case S_IFDIR:  printf("directory\n");               break;
-			  case S_IFIFO:  printf("FIFO/pipe\n");               break;
-			  case S_IFLNK:  printf("symlink\n");                 break;
-			  case S_IFREG:  printf("regular file\n");            break;
-			  case S_IFSOCK: printf("socket\n");                  break;
+		      case S_IFBLK:  printf("block device\n");            break; //일반 파일 여부
+			  case S_IFCHR:  printf("character device\n");        break; //char device
+			  case S_IFDIR:  printf("directory\n");               break; //directory
+			  case S_IFIFO:  printf("FIFO/pipe\n");               break; //FIFO
+			  case S_IFLNK:  printf("symlink\n");                 break; //SYMBOLIC LINK
+			  case S_IFREG:  printf("regular file\n");            break; //REGULAR FILE
+			  case S_IFSOCK: printf("socket\n");                  break; //SOCKET
 			  default:       printf("unknown?\n");                break;
 		}
 	   
-	   printf("I-node number:            %ld\n", (long) sb.st_ino);
-	   printf("Mode:                     %lo (octal)\n", (unsigned long) sb.st_mode);
-	   printf("Link count:               %ld\n", (long) sb.st_nlink);
+	   printf("I-node number:            %ld\n", (long) sb.st_ino); //inode number
+	   printf("Mode:                     %lo (octal)\n", (unsigned long) sb.st_mode); //파일종류 및 접근 권한
+	   printf("Link count:               %ld\n", (long) sb.st_nlink); 
 	   printf("Ownership:                UID=%ld   GID=%ld\n", (long) sb.st_uid, (long) sb.st_gid);
 	   printf("Preferred I/O block size: %ld bytes\n",         (long) sb.st_blksize);
 	   printf("File size:                %lld bytes\n",        (long long) sb.st_size);
