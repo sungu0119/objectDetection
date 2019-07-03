@@ -33,24 +33,24 @@ class MyApp(QWidget):
      self.qle = QLineEdit(self)
      self.qle.move(60, 100)
      self.show()
-
+    
     def changeLedit(self, state):
      text = ''
 
      if self.cb1.isChecked() == True:
       text += self.cb1.text()
      else:
-      text.lstrip(self.cb1.text()) 
+      text.strip(self.cb1.text()) 
 
      if self.cb2.isChecked() == True:
       text += self.cb2.text()
      else:
-      text.lstrip(self.cb2.text()) 
+      text.strip(self.cb2.text()) 
 
      if self.cb3.isChecked() == True:
       text += self.cb3.text()
      else:
-      text.lstrip(self.cb3.text()) 
+      text.strip(self.cb3.text()) 
 
      self.qle.setText(text)
      self.qle.adjustSize()
