@@ -39,18 +39,12 @@ class MyApp(QWidget):
 
      if self.cb1.isChecked() == True:
       text += self.cb1.text()
-     else:
-      text.strip(self.cb1.text()) 
 
      if self.cb2.isChecked() == True:
       text += self.cb2.text()
-     else:
-      text.strip(self.cb2.text()) 
 
      if self.cb3.isChecked() == True:
       text += self.cb3.text()
-     else:
-      text.strip(self.cb3.text()) 
 
      self.qle.setText(text)
      self.qle.adjustSize()
