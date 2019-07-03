@@ -21,7 +21,7 @@ class MyApp(QWidget):
     
      self.cb3 = QCheckBox('orange ', self)
      self.cb3.move(20, 60)
-# cb.toggle()
+
      self.cb1.stateChanged.connect(self.changeLedit)
      self.cb2.stateChanged.connect(self.changeLedit)
      self.cb3.stateChanged.connect(self.changeLedit)
