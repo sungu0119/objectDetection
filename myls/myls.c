@@ -1,4 +1,4 @@
-nclude <sys/types.h>
+#include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -201,9 +201,15 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-						printf("%s
-										}
-										}
-										closedir(dp);
-										return 0;
-										}
+						printf("%s %3ld %6s %6s %8ld %s %s\n", \
+								perm, statbuf.st_nlink, user_pw->pw_name, \
+								group_entry->gr_name, statbuf.st_size, temp, dent->d_name);
+				}
+
+		}
+		closedir(dp);
+		return 0;
+
+}
+
+

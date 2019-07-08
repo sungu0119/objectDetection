@@ -4,9 +4,11 @@
 #include<sys/stat.h>
 #include<sys/types.h>
 #include<dirent.h>
+#include<unistd.h>
 #include<errno.h>
 #include<time.h>
 
+#define DIRC_BUFF 1024
 
 char* get_time(){
 		time_t t;
@@ -23,21 +25,30 @@ char* get_time(){
 		return str;
 }
 
-int mk_folder(){
-		char fPath[50] = {"/home/jk/user/blackbox/"};
-		strcat(fPath, get_time());
-		int nResult = mkdir(fPath, 0776);
 
-		if(nResult == 0)
-		{
-				printf("folder make\n");
-				return 1;
+void mk_folder(){
+		char buff[DIRC_BUFF+1];
+		char *p_dirc = buff;
+		char fPath[DIRC_BUFF+1] = {"/home/jk/user/blackbox/"};
+		strcat(fPath, get_time());
+ 		
+		memcpy(buff , fPath, DIRC_BUFF);
+		buff[DIRC_BUFF] = '\0';
+
+		while(*p_dirc){
+				if('/' == *p_dirc){
+						*p_dirc = '\0';
+						if( 0 != access(buff, F_OK)){
+								mkdir(buff, 0777);
+						}
+						*p_dirc = '/';
+				}
+				p_dirc++;
 		}
-		else if(nResult == -1)
-		{
-				perror("folder make error");
-				return -1;
+		if( 0!= access(buff ,F_OK)){
+				mkdir(buff, 0777);
 		}
+		
 }
 
 
