@@ -227,18 +227,12 @@ int main(int argc, char* argv[])
 	}
 
 	if(pid == 0) {
-		video_recode();
+	//	video_recode();
 		if(video_recode() == -1)
 			exit(0);
 	}
 	else{
 		mk_folderPath();
-
-		if(check_disk() > 75000)
-		{
-			printf("buffer over\n");
-			remove_dir();
-		}
 
 		while(1){
 			time(&the_time);
@@ -254,7 +248,7 @@ int main(int argc, char* argv[])
 			
 			if(the_time >= s_time+30) //first or after 10seconds
 			{
-				if(check_disk() > 80000)
+				if(check_disk() > 4150000)
 				{
 					printf("buffer over\n");
 					remove_dir();
