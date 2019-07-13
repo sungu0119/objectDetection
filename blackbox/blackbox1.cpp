@@ -4,15 +4,22 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <string>
+#include <dirent.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include <sys/statvfs.h>
 
 using namespace cv;
 using namespace std;
+
+const int VIDEO_WIDTH = 640;
+const int VIDEO_HIGHT = 360;
+const int RUN_TIME = 60;
+
 
 char* command_call(char* path)
 {
@@ -57,41 +64,16 @@ void remove_dir()
 	system(rmdir);
 
 }
-int check_disk()
+float check_disk()
 {
-	char path[BUFSIZ + 1] = "du -s ./user/blackbox/";
-	char size[BUFSIZ + 1] = "df -k";
-	char *sArr[BUFSIZ + 1] = { NULL , };
-	char *sArr2[BUFSIZ + 1] = { NULL , };
-	int i = 0;
-	int byte = 0;
-	int a_size = 0;
-
-	char buffer[BUFSIZ +1];
-	strcpy(buffer, command_call(path));
-
-	char buffer2[BUFSIZ + 1];
-	strcpy(buffer2, command_call(size));
-
-	char* ptr = strtok(buffer, "\0");
-	char* ptr2 = strtok(buffer2, "\n");
-	for(int j = 0 ; j < 4 ; ++ j)
-	{
-		ptr2 = strtok(NULL," ");
-	}
-	while(ptr != NULL)
-	{
-		sArr[i] = ptr;
-		i++;
-
-		ptr = strtok(NULL, " ");
+	struct statvfs stat;
+	char path[BUFSIZ +1] = "./user/blackbox";
+	
+	if(statvfs(path, &stat) != 0){
+		printf("statvfs error\n");
 	}
 
-	a_size = atoi(ptr2);
-	byte = atoi(sArr[0]);
-	printf("current size = %dkb , available size = %dkb\n", byte , a_size);
-
-	return byte;
+	return (float)stat.f_bavail / (float)stat.f_blocks;
 }
 
 void getfiletime(time_t org_time, char *time_str)
@@ -119,27 +101,46 @@ void getdirtime(time_t org_time, char *time_str)
 			tm_ptr->tm_mday,
 			tm_ptr->tm_hour
 	       );
+
 }
 
 void mk_folderPath(){
-	system("mkdir ./user");
-	system("mkdir ./user/blackbox");
+	char buff[BUFSIZ + 1] = "./user/blackbox/";
+	char *p_dirc = buff;
+
+	buff[BUFSIZ + 1] = '\0';
+
+	while(*p_dirc){
+		if('/' == *p_dirc){
+			*p_dirc = '\0';
+			if( 0!= access(buff, F_OK)){
+					mkdir(buff, 0777);
+					}
+				*p_dirc = '/';
+				}
+		else
+			printf("file path make error\n");	
+
+		p_dirc++;
+	}
 }
 
 void mk_folder(){
+
+	char buff[BUFSIZ + 1] = "./user/blackbox/";
+
 	time_t the_time;
-	string folderName = "";
 	char d_buffer[100];
+	
 	time(&the_time);
 	getdirtime(the_time,d_buffer);
-
-
-	if(folderName != d_buffer){	
-		folderName = d_buffer;
-		string str = "mkdir ./user/blackbox/" +folderName;
-		const char* command = str.c_str();
-		system(command);
-	}
+	
+	strcat(buff, d_buffer);
+	
+	if(mkdir(buff, 0777) == 0)
+		printf("folder make\n");
+	else
+		printf("folder make error\n");
 
 }
 
@@ -151,6 +152,8 @@ int video_recode(){
 	char d_buffer[100];
 	string videoName;
 	string folderName;
+	string v_w = to_string(VIDEO_WIDTH);
+	string v_h = to_string(VIDEO_HIGHT);
 	int s_time;
 	bool first = true;
 
@@ -158,7 +161,7 @@ int video_recode(){
 	folderName = d_buffer;
 
 	// for jetson onboard camera
-	string gst = "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int)500, height=(int)300,format=(string)NV12, framerate=(fraction)24/1 ! nvvidconv flip-method=0 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink";
+	string gst = "nvarguscamerasrc ! video/x-raw(memory:NVMM), width="+v_w+", height="+v_h+",format=(string)NV12, framerate=(fraction)24/1 ! nvvidconv flip-method=0 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink";
 
 	VideoCapture cap(gst);
 
@@ -183,7 +186,7 @@ int video_recode(){
 			folderName = d_buffer;
 		}
 		//make new record file 
-		if(the_time >= s_time+30 || first) //first or after 10seconds
+		if(the_time >= s_time+ RUN_TIME || first) //first or after 10seconds
 		{
 			s_time = the_time;
 			getfiletime(the_time,v_buffer);
@@ -192,13 +195,14 @@ int video_recode(){
 			videoName += ".avi";
 			first = false;
 
-			video.open(videoName,CV_FOURCC('D','I','V','X'),24,Size(500,300));
+			video.open(videoName,CV_FOURCC('D','I','V','X'),24,Size(VIDEO_WIDTH,VIDEO_HIGHT));
+
+			printf("DISK LEFT SIZE: %f\n",check_disk());
 		}
 
 		//read,write
 		video.write(img_color);
 		imshow("Color", img_color);
-
 		if (waitKey(25) >= 0)
 			return -1;
 	}
@@ -218,6 +222,7 @@ int main(int argc, char* argv[])
 	int status;
 	
 
+	printf("DISK LEFT SIZE: %f\n",check_disk());
 	
 	pid = fork();
 
@@ -227,14 +232,16 @@ int main(int argc, char* argv[])
 	}
 
 	if(pid == 0) {
-	//	video_recode();
+
 		if(video_recode() == -1)
 			exit(0);
 	}
 	else{
 		mk_folderPath();
+		mk_folder();
 
 		while(1){
+			
 			time(&the_time);
 			if(s_time == 0)
 				s_time = the_time;
@@ -246,9 +253,9 @@ int main(int argc, char* argv[])
 				folderName = d_buffer;
 			}
 			
-			if(the_time >= s_time+30) //first or after 10seconds
+			if(the_time >= s_time+RUN_TIME) //first or after 10seconds
 			{
-				if(check_disk() > 4150000)
+				if(check_disk() < 0.3)
 				{
 					printf("buffer over\n");
 					remove_dir();
@@ -264,11 +271,11 @@ int main(int argc, char* argv[])
 
 			if(0 != pid_child){
 				exit(0);
-		}
-
-		exit(0);
+			}
 
 	}
+	exit(0);
 
 	return 0;
 }
+
